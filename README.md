@@ -134,49 +134,68 @@ Measures function-level code quality across PHP files:
 ## Installation
 
 ```Shell
+# 1. Get the code
+git clone https://github.com/qed42/eventhorizon-cli.git
 cd eventhorizon-cli
+
+# 2. One-command setup — creates a venv, installs deps, and activates it
 source ./setup.sh
 ```
 
-The setup script checks that Python 3.9+ is available, creates a virtual environment, installs all dependencies (including test tools), activates the venv, and makes the `eventhorizon` command available in your current terminal.
+`setup.sh` checks for Python 3.9+, creates a `.venv`, installs all dependencies, and activates the environment in your current shell. When it finishes, two **equivalent** commands are on your PATH — **`eh`** (short) and **`eventhorizon`** (long):
+
+```Shell
+eh --help
+```
+
+> **Opening a new terminal later?** The `eh` command lives inside the project's virtual environment, so re-activate it first:
+> ```Shell
+> source /path/to/eventhorizon-cli/.venv/bin/activate
+> ```
+> Tip: add that line to your `~/.zshrc` / `~/.bashrc` to always have `eh` available, or `pipx install /path/to/eventhorizon-cli` for a global, isolated install.
 
 ***
 
 ## Usage
 
+`eh` is the main command. Just point it at a Drupal project — **`eh <path>` is shorthand for `eh analyze <path>`** and runs the full analysis. (`eventhorizon` is a longer-named alias for the exact same command, if you prefer it in scripts.)
+
 ```Shell
 # Show the splash screen and help
-eventhorizon
+eh
 
-# Run full analysis (security + performance) on custom modules
-eventhorizon analyze /path/to/drupal-project
+# Analyze a Drupal project (security + performance + code metrics on custom modules)
+eh /path/to/drupal-project
 
-# Standard composer project — just point at project root, webroot is auto-detected
-eventhorizon analyze /path/to/composer-project
+# Standard composer project — point at the root, webroot is auto-detected
+eh /path/to/composer-project
 
 # Or point directly at the webroot — both work
-eventhorizon analyze /path/to/composer-project/web
+eh /path/to/composer-project/web
 
 # Security-only analysis
-eventhorizon analyze /path/to/drupal-project --type security
+eh /path/to/drupal-project --type security
 
 # Performance-only, contrib modules, CSV output only
-eventhorizon analyze /path/to/drupal-project --type performance --filter contrib --format csv
+eh /path/to/drupal-project --type performance --filter contrib --format csv
 
 # Code metrics only (cyclomatic complexity, maintainability index)
-eventhorizon analyze /path/to/drupal-project --type code-metrics
+eh /path/to/drupal-project --type code-metrics
 
 # Multisite — scan a specific site
-eventhorizon analyze /path/to/multisite-project --site site1
+eh /path/to/multisite-project --site site1
 
 # Analyze all modules, save reports to a specific directory
-eventhorizon analyze /path/to/drupal-project --filter all --output ./my-reports
+eh /path/to/drupal-project --filter all --output ./my-reports
 
 # Verbose mode (debug logging to stderr)
-eventhorizon analyze /path/to/drupal-project -v
+eh /path/to/drupal-project -v
 
 # Quiet mode (suppress terminal output, only generate reports)
-eventhorizon analyze /path/to/drupal-project -q
+eh /path/to/drupal-project -q
+
+# The long-form alias and explicit subcommand are equivalent:
+eventhorizon analyze /path/to/drupal-project
 ```
 
 ### Command Options
