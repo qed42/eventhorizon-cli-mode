@@ -1,0 +1,14 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - paragraphs.paragraphs_type.text
+    - paragraphs.paragraphs_type.image
+id: paragraph.image.field_ref_text
+field_name: field_ref_text
+entity_type: paragraph
+bundle: image
+label: Referenced Text
+description: ''
+required: false
+field_type: entity_reference_revisions

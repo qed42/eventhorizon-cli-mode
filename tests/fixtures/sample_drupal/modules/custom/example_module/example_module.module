@@ -1,0 +1,103 @@
+<?php
+
+/**
+ * @file
+ * Sample module with intentional issues for testing.
+ */
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function example_module_preprocess_node(&$variables) {
+  // Performance issue: entity load in preprocess
+  $user = \Drupal\user\Entity\User::load($variables['node']->getOwnerId());
+  $variables['author_name'] = $user->getDisplayName();
+
+  // Security issue: unserialize
+  $data = unserialize($variables['node']->get('field_data')->value);
+
+  // Performance issue: debug code leftover
+  dpm($variables);
+
+  // Security issue: direct markup with variable
+  $build['info'] = [
+    '#markup' => $variables['title'],
+  ];
+
+  // Performance issue: cache disabled
+  $build['content'] = ['#markup' => 'test', '#cache' => ['max-age' => 0]];
+}
+
+/**
+ * Implements hook_menu().
+ */
+function example_module_menu() {
+  // Performance issue: uncached database query in expensive context
+  $results = \Drupal::entityQuery('node')
+    ->condition('type', 'article')
+    ->execute();
+
+  return $results;
+}
+
+/**
+ * Helper function called multiple times.
+ */
+function example_module_get_data($nid) {
+  $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+  return $node->getTitle();
+}
+
+// Call the helper multiple times to trigger drupal_static warning.
+$a = example_module_get_data(1);
+$b = example_module_get_data(2);
+$c = example_module_get_data(3);
+
+/**
+ * Example function using page cache kill switch.
+ */
+function example_module_disable_cache() {
+  \Drupal::service('page_cache_kill_switch')->trigger();
+}
+
+/**
+ * Example REST resource with zero max-age.
+ */
+function example_module_api_response() {
+  $response = new CacheableMetadata();
+  $response->setMaxAge(0);
+  return $response;
+}
+
+/**
+ * Tempstore usage without auth check.
+ */
+function example_module_tempstore_access() {
+  $tempstore = \Drupal::service('tempstore.private')->get('example_module');
+  return $tempstore->get('data');
+}
+
+/**
+ * Loads all entities of a type.
+ */
+function example_module_load_all_nodes() {
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $nodes = $storage->loadMultiple();
+  return $nodes;
+}
+
+/**
+ * Kernel event subscriber reference.
+ */
+function example_module_get_events() {
+  return [KernelEvents::REQUEST => 'onRequest'];
+}
+
+/**
+ * Broad user cache context.
+ */
+function example_module_build_render() {
+  $build = [];
+  $build['#cache'] = ['contexts' => ['user'], 'tags' => ['node_list']];
+  return $build;
+}

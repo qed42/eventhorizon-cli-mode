@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: text
+label: Text
+icon_default: ''
+description: 'A simple text paragraph.'
+behavior_plugins: {  }

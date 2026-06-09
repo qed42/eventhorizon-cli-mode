@@ -1,0 +1,4 @@
+name: My Theme
+type: theme
+core_version_requirement: ^10
+base theme: stable9

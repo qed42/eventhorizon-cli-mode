@@ -1,0 +1,5 @@
+name: Example Theme
+type: theme
+description: A sample theme for testing.
+core_version_requirement: ^9 || ^10
+base theme: classy

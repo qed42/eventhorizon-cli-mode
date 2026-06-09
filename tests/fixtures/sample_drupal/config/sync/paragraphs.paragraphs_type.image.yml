@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - paragraphs.paragraphs_type.text
+id: image
+label: Image
+icon_default: ''
+description: 'An image paragraph with optional caption.'
+behavior_plugins: {  }

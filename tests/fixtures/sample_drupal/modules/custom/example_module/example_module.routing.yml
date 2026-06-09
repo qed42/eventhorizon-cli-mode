@@ -1,0 +1,7 @@
+example_module.open_page:
+  path: '/example/open'
+  defaults:
+    _controller: '\Drupal\example_module\Controller\ExampleController::page'
+    _title: 'Open Page'
+  requirements:
+    _access: 'TRUE'

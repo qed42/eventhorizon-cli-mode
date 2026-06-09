@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * A clean contrib module with no issues.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function contrib_module_help($route_name) {
+  if ($route_name === 'help.page.contrib_module') {
+    return '<p>This is a sample contrib module.</p>';
+  }
+}

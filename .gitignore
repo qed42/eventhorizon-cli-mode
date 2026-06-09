@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Environment
+.env*
+!.env.example
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS artifacts
+.DS_Store
+._*
+Thumbs.db
+
+# Type checking / linting cache
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Reports (generated output)
+eventhorizon-reports/
+
+# Internal — DO NOT PUBLISH (planning, strategy, private agent/AI tooling)
+roadmap-planning.md
+*-planning.md
+CLAUDE.md
+.claude/
+wiki/
+
+# Heavy source recording — only the optimized asset under assets/ is committed
+/eventhorizon-cli.gif
+*.mov
+*.mkv
+

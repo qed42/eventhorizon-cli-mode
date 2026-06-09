@@ -1,0 +1,17 @@
+{# Sample Twig template with intentional issues for testing. #}
+<div class="example-component">
+  {# twig_dump_debug: debugging output left in template #}
+  {{ dump(content) }}
+
+  {# twig_raw_filter: bypasses auto-escaping #}
+  {{ content.field_body|raw }}
+
+  {# twig_safe_join: marks output as safe #}
+  {{ items|safe_join(', ') }}
+
+  {# twig_inline_js: inline script tag #}
+  <script>console.log('inline js');</script>
+
+  {# twig_inline_styles: inline style attribute #}
+  <div style="color: red;">Styled inline</div>
+</div>

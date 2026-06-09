@@ -1,0 +1,5 @@
+name: Example Module
+type: module
+description: A sample module for testing EventHorizon CLI.
+core_version_requirement: ^9 || ^10
+package: Custom

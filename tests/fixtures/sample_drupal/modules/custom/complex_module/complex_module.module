@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * @file
+ * Module with intentionally complex functions for code metrics testing.
+ */
+
+/**
+ * A function with high cyclomatic complexity (CCN > 10).
+ */
+function complex_module_process_data($data, $type, $options) {
+  if (empty($data)) {
+    return NULL;
+  }
+
+  if ($type === 'node') {
+    if (isset($options['published'])) {
+      if ($options['published'] === TRUE) {
+        foreach ($data as $item) {
+          if ($item->isPublished()) {
+            if ($item->hasField('field_tags')) {
+              if (!empty($item->get('field_tags')->getValue())) {
+                return $item;
+              }
+            }
+          }
+        }
+      } elseif ($options['published'] === FALSE) {
+        return NULL;
+      }
+    }
+  } elseif ($type === 'user') {
+    if (isset($options['role'])) {
+      foreach ($data as $user) {
+        if ($user->hasRole($options['role']) && $user->isActive()) {
+          return $user;
+        }
+      }
+    }
+  } elseif ($type === 'term') {
+    if ($options['vocabulary'] ?? FALSE) {
+      return $data;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * A function with many anti-patterns (> 5).
+ */
+function complex_module_antipattern_heavy() {
+  $service = \Drupal::service('entity_type.manager');
+  $database = \Drupal::database();
+  $config = \Drupal::config('system.site');
+  $state = \Drupal::state();
+  $cache = \Drupal::cache();
+  $logger = \Drupal::logger('complex_module');
+
+  $data = $config->get('name');
+  $nested = $data['level1']['level2']['level3'];
+  $more_nested = $data['a']['b']['c'];
+
+  $build = [];
+  $build['#markup'] = $data;
+  $build['#prefix'] = '<div>';
+  $build['#suffix'] = '</div>';
+
+  return $build;
+}
+
+/**
+ * A simple, clean function (low complexity, no anti-patterns).
+ */
+function complex_module_simple_helper($value) {
+  return trim($value);
+}

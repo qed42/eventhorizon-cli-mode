@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+name: Article
+type: article
+description: 'Use articles for time-sensitive content like news and blog posts.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: true

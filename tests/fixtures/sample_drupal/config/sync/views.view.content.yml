@@ -1,0 +1,24 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - user
+id: content
+label: Content
+module: views
+description: 'Find and manage content.'
+tag: default
+base_table: node_field_data
+base_field: nid
+display:
+  default:
+    display_plugin: default
+    id: default
+    display_title: Default
+    position: 0
+  page_1:
+    display_plugin: page
+    id: page_1
+    display_title: Page
+    position: 1

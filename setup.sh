@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# EventHorizon CLI — one-command setup
+
+# Resolve script directory before anything else.
+# When sourced, $0 may be the shell itself (bash) or the script (zsh).
+# BASH_SOURCE is reliable in bash; fall back to $0 for zsh.
+_eh_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+
+# ── Check for Python 3 ──────────────────────────────────────────
+if ! command -v python3 &>/dev/null; then
+    echo "ERROR: Python 3 is not installed or not on your PATH."
+    echo ""
+    echo "Install Python 3.9+ for your platform:"
+    echo "  macOS:   brew install python"
+    echo "  Ubuntu:  sudo apt install python3 python3-venv"
+    echo "  Fedora:  sudo dnf install python3"
+    echo "  Windows: https://www.python.org/downloads/"
+    echo ""
+    echo "Then re-run:  source ./setup.sh"
+    unset _eh_dir
+    return 1 2>/dev/null || exit 1
+fi
+
+# Verify minimum version (3.9)
+PY_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
+PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+
+if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 9 ]; }; then
+    echo "ERROR: Python 3.9+ is required, but you have Python $PY_VERSION."
+    echo ""
+    echo "Please upgrade Python and re-run:  source ./setup.sh"
+    unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR
+    return 1 2>/dev/null || exit 1
+fi
+
+echo "Setting up EventHorizon CLI... (Python $PY_VERSION)"
+
+# ── Create venv and install ──────────────────────────────────────
+# Run in a subshell so cd/failures don't affect the parent shell.
+(
+    set -e
+    cd "$_eh_dir"
+    python3 -m venv .venv
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    pip install -e ".[dev]" --quiet
+)
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: Setup failed. Check the output above."
+    unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR
+    return 1 2>/dev/null || exit 1
+fi
+
+# Activate the venv in the current shell (outside the subshell).
+# shellcheck disable=SC1091
+source "$_eh_dir/.venv/bin/activate"
+
+echo ""
+echo -e "\033[32mSetup complete! Run:"
+echo "  eh <path_to_drupal_project>    Analyze a Drupal codebase"
+echo -e "  eh --help                      See all options\033[0m"
+
+unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR

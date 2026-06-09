@@ -1,0 +1,467 @@
+# Defines custom file-based pattern matching rules.
+# severity: can be 'error', 'warning', 'info'
+# category: must be 'security' or 'performance'
+# message: a description of the issue.
+# pattern: a regular expression to find the issue.
+# file_types: a list of file extensions to scan (e.g., .twig, .module)
+
+custom_checks:
+  # =======================================================
+  # High-Impact Security Rules
+  # =======================================================
+  - id: insecure_unserialize
+    severity: error
+    category: security
+    message: "The unserialize() function is a significant security risk when used with user-provided data and can lead to remote code execution."
+    pattern: '\bunserialize\s*\('
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: route_access_true
+    severity: error
+    category: security
+    message: "A route is defined with '_access': 'TRUE', which completely disables all access checks. Use a permission-based requirement like '_permission': 'access content'."
+    pattern: "['\"]?_access['\"]?\\s*:\\s*['\"]?TRUE"
+    file_types:
+      - .routing.yml
+
+  - id: dangerous_exec
+    severity: error
+    category: security
+    message: "Execution functions like exec(), shell_exec(), passthru(), and system() are extremely dangerous and can lead to command injection vulnerabilities if not handled with extreme care."
+    pattern: '\b(exec|shell_exec|passthru|system)\s*\('
+    file_types:
+      - .php
+      - .module
+      - .inc
+      
+  - id: file_unmanaged_save
+    severity: error
+    category: security
+    message: "The `file_unmanaged_save_data()` function should be avoided. It does not perform any security checks and can allow arbitrary file uploads. Use the FileSystem service and validate user input."
+    pattern: '\bfile_unmanaged_save_data\s*\('
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: render_array_markup_xss
+    severity: error
+    category: security
+    message: "Directly assigning user input or dynamic variables to '#markup' can lead to XSS vulnerabilities. Use '#plain_text' or ensure variables are sanitized with XSS::filter or CheckPlain::check()."
+    pattern: "['\"]#markup['\"]\\s*=>\\s*\\$"
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  - id: direct_get_post_in_query
+    severity: error
+    category: security
+    message: "Direct usage of $_GET or $_POST in a database query is a major SQL Injection risk. Use the database abstraction layer with placeholders."
+    pattern: '(db_query|->query)\s*\([^)]*\$_(GET|POST|REQUEST)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: twig_unsafe_filter
+    severity: error
+    category: security
+    message: "Unsafe filter 'raw' or 'safe_join' used in Twig. This is a potential XSS vulnerability if the variable is not properly sanitized beforehand."
+    pattern: '\|\s*(raw|safe_join)\s*[|}]'
+    file_types:
+      - .twig
+
+  - id: direct_db_connection
+    severity: warning
+    category: security
+    message: "Direct use of `\\Drupal::database()` or the `database` service was found. Prefer using the Entity API (Storage/Query) which respects entity access hooks and cacheability."
+    pattern: "(\\\\Drupal::database|\\['database'\\]|'database')\\s*(\\(|\\->)"
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  - id: t_function_xss
+    severity: warning
+    category: security
+    message: "The t() function should not be used with '@' placeholders for variables containing user input or HTML, as this bypasses sanitation and can lead to XSS vulnerabilities. Use ':' or '%' placeholders instead."
+    pattern: "\\bt\\(\\s*[^,)]+\\s*,\\s*\\[[^\\]]*'@[^\\]]+\\]"
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  - id: concatenated_query
+    severity: warning
+    category: security
+    message: "A database query appears to be built using string concatenation with a variable. This is a potential SQL Injection risk. Always use placeholders (e.g., ->condition('field', $value) or ->where('field = :placeholder', [':placeholder' => $value]))."
+    pattern: '->(query|where|condition)\s*\([^)]*\.\s*\$'
+    file_types:
+      - .php
+      - .module
+      - .inc
+      
+  - id: config_override_in_code
+    severity: warning
+    category: security
+    message: "Configuration is being saved directly in code. This can lead to state mismatches between environments. Configuration changes should typically be in YAML files or update hooks."
+    pattern: '->getEditable\s*\([^)]*\)->save\(\)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  - id: custom_route_access
+    severity: info
+    category: security
+    message: "A route uses '_custom_access'. Ensure the access check class properly implements cacheability and returns an AccessResult object, explicitly forbidding access when appropriate."
+    pattern: "_custom_access:"
+    file_types:
+      - .routing.yml
+
+  # =======================================================
+  # High-Impact Performance Rules
+  # =======================================================
+  - id: cache_disabled
+    severity: error
+    category: performance
+    message: "A render array explicitly disables caching with '#cache' => ['max-age' => 0]. This can severely degrade performance and should only be used if absolutely necessary."
+    # Single-line pattern to avoid YAML trailing newline issues
+    pattern: "'#cache'\\s*=>\\s*\\[.*'max-age'\\s*=>\\s*0"
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+      
+  - id: twig_drupal_function_loop
+    severity: error
+    category: performance
+    message: "Calling a Drupal function like drupal_entity() or drupal_view() inside a Twig 'for' loop can be very slow. Pre-render this data in a preprocess function instead."
+    pattern: '\{%\s*for\s.*?\}.*?\{\{\s*drupal_(entity|view)\('
+    file_types:
+      - .twig
+
+  - id: entity_load_in_loop
+    severity: warning
+    category: performance
+    message: "An entity load (e.g., Node::load, entityTypeManager->getStorage->load) was detected inside a loop (foreach, while). This can cause an 'N+1 query' performance problem. Consider loading all entities at once before the loop."
+    pattern: "(foreach|while)\\s*\\(.*?\\)\\s*\\{[^}]*?(Node|User|Term|Entity)::load\\s*\\("
+    multiline: true
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+      
+  - id: uncacheable_block
+    severity: warning
+    category: performance
+    message: "A Block Plugin's build() method returns a render array without any '#cache' keys. This makes the block uncacheable. Add '#cache' with 'contexts', 'tags', or 'max-age'."
+    pattern: "public\\s+function\\s+build\\(\\s*\\)"
+    file_types:
+      - .php
+
+  - id: debug_code_leftover
+    severity: warning
+    category: performance
+    message: "Debugging code (dpm, kint, dd, var_dump, print_r) was found. This should be removed from production code as it can expose sensitive information and impact performance."
+    pattern: '\b(dpm|kint|dd|var_dump|print_r)\s*\('
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  - id: slow_file_in_hook
+    severity: warning
+    category: performance
+    message: "A potentially slow file operation (e.g., file_get_contents) was found. These operations are blocking and can dramatically increase page load times if used in hooks or render methods."
+    pattern: "\\b(file_get_contents|file_put_contents|fopen|fread|fwrite)\\s*\\("
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  - id: views_query_alter
+    severity: info
+    category: performance
+    message: "Use of hook_views_query_alter() detected. Modifying queries directly can be powerful but can also bypass Views' own performance optimizations and caching. Review for efficiency."
+    pattern: 'function\s+\w+_views_query_alter\s*\('
+    file_types:
+      - .module
+      - .inc
+      
+  - id: logger_in_loop
+    severity: info
+    category: performance
+    message: "A logger call was found inside a loop. If using the database logger, this can add significant overhead on high-traffic pages. Ensure this is not in a performance-critical path."
+    pattern: "(foreach|while|for)\\s*\\(.*?\\).*?\\$?\\w*->?(info|warning|error|notice|debug|log)\\s*\\("
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  - id: header_true_in_library
+    severity: info
+    category: performance
+    message: "'header: true' in a .libraries.yml file loads assets in the <head>, which can block rendering. Prefer loading assets in the footer unless absolutely necessary."
+    pattern: 'header:\s*true'
+    file_types:
+      - .libraries.yml
+
+  - id: deprecated_asset_lib
+    severity: info
+    category: performance
+    message: "The deprecated drupal_add_js() or drupal_add_css() function is being used. For better performance and aggregation, assets should be defined in a *.libraries.yml file and attached to a render array."
+    pattern: '\b(drupal_add_js|drupal_add_css)\s*\('
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme
+
+  # =======================================================
+  # Security Rules (Error Severity)
+  # =======================================================
+  - id: eval_usage
+    severity: error
+    category: security
+    message: "The eval() function executes arbitrary PHP code and is a critical security risk. Use a safer alternative such as a callback or class-based approach."
+    pattern: '\beval\s*\('
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: preg_replace_eval
+    severity: error
+    category: security
+    message: "The /e modifier in preg_replace() is deprecated and allows arbitrary code execution (RCE). Use preg_replace_callback() instead."
+    pattern: "preg_replace\\s*\\(\\s*['\"].*e['\"]"
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: file_put_contents_variable
+    severity: error
+    category: security
+    message: "file_put_contents() is called with a variable file path, which may allow path traversal attacks. Validate and sanitize the file path before writing."
+    pattern: '\bfile_put_contents\s*\(\s*\$'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: header_location_variable
+    severity: error
+    category: security
+    message: "A Location header is set using a variable, which can lead to open redirect vulnerabilities. Validate the redirect target against an allowlist."
+    pattern: "\\bheader\\s*\\(\\s*['\"]Location:.*\\$"
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: form_token_disabled
+    severity: error
+    category: security
+    message: "CSRF protection is disabled by setting #token to FALSE. This exposes the form to cross-site request forgery attacks."
+    pattern: '\$form\[.*#token.*\]\s*=\s*FALSE'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  # =======================================================
+  # Security Rules (Warning Severity)
+  # =======================================================
+  - id: http_client_no_verify
+    severity: warning
+    category: security
+    message: "TLS certificate verification is disabled ('verify' => false). This allows man-in-the-middle attacks. Only disable in development environments."
+    pattern: "'verify'\\s*=>\\s*false"
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: session_direct_access
+    severity: warning
+    category: security
+    message: "Direct $_SESSION access detected. In Drupal, use the tempstore service (\\Drupal::service('tempstore.private')) for session data management."
+    pattern: '\$_SESSION\s*\['
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: access_result_neutral
+    severity: warning
+    category: security
+    message: "AccessResult::neutral() is permissive by default — other access checks can override it to allow access. Consider using AccessResult::forbidden() for explicit denial."
+    pattern: 'AccessResult::neutral\(\)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: deprecated_node_access
+    severity: warning
+    category: security
+    message: "hook_node_access() is deprecated in Drupal 10+. Use an EntityAccessControlHandler or a policy-based access check instead."
+    pattern: 'function\s+\w+_node_access\b'
+    file_types:
+      - .php
+      - .module
+
+  # =======================================================
+  # Performance Rules (Warning Severity)
+  # =======================================================
+  - id: load_multiple_in_loop
+    severity: warning
+    category: performance
+    message: "loadMultiple() is called inside a loop (foreach/while), which defeats the purpose of batch loading. Load all entities before the loop starts."
+    pattern: '(foreach|while).*->loadMultiple'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: php_static_instead_drupal
+    severity: warning
+    category: performance
+    message: "A PHP static variable is used where drupal_static() would be more appropriate. drupal_static() allows cache resets between tests and cron runs."
+    pattern: 'static\s+\$\w+\s*=\s*NULL'
+    file_types:
+      - .php
+      - .module
+
+  # =======================================================
+  # Security Rules
+  # =======================================================
+  - id: anonymous_session_tempstore
+    severity: warning
+    category: security
+    message: "Session-based tempstore is used without an authentication check. Anonymous users sharing the session can access or overwrite each other's data. Gate tempstore access behind \\Drupal::currentUser()->isAuthenticated()."
+    pattern: '(tempstore\.private|PrivateTempStore).*(?!isAuthenticated)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: twig_inline_js
+    severity: error
+    category: security
+    message: "Inline <script> tags in Twig templates bypass Drupal's asset pipeline and Content Security Policy. Attach JavaScript via a *.libraries.yml file instead."
+    pattern: '<script[\s>]'
+    file_types:
+      - .twig
+
+  - id: twig_raw_filter
+    severity: error
+    category: security
+    message: "The |raw filter disables Twig auto-escaping and can lead to XSS. Use |escape or a safe markup object instead."
+    pattern: '\|\s*raw\b'
+    file_types:
+      - .twig
+
+  - id: twig_safe_join
+    severity: warning
+    category: security
+    message: "The |safe_join filter marks output as safe, bypassing auto-escaping. Ensure all joined values are pre-sanitized to avoid XSS."
+    pattern: '\|\s*safe_join\b'
+    file_types:
+      - .twig
+
+  # =======================================================
+  # Performance Rules
+  # =======================================================
+  - id: cache_max_age_zero_api
+    severity: warning
+    category: performance
+    message: "A REST resource or API controller sets max-age to 0, disabling page and dynamic page caching for the response. Use cache tags/contexts instead of zero max-age."
+    pattern: '(#cache.*max-age.*0|CacheableMetadata.*setMaxAge\s*\(\s*0\s*\)|addCacheableDependency.*max-age.*0)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: kernel_events_request_response
+    severity: info
+    category: performance
+    message: "A KernelEvents::REQUEST or KernelEvents::RESPONSE subscriber runs on every request. Keep the logic lightweight and guard with early returns to avoid performance overhead."
+    pattern: '(KernelEvents::(REQUEST|RESPONSE)|kernel\.request|kernel\.response)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: load_multiple_all_entities
+    severity: warning
+    category: performance
+    message: "loadMultiple() called without an ID list loads ALL entities of that type into memory. Pass an explicit array of IDs or use an entity query with a range."
+    pattern: '->loadMultiple\s*\(\s*\)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: page_cache_kill_switch
+    severity: warning
+    category: performance
+    message: "The page cache kill switch disables caching for the entire page. This severely impacts performance for anonymous users. Use cache contexts or tags instead."
+    pattern: '(page_cache_kill_switch|killSwitch\s*->|PageCacheKillSwitch)'
+    file_types:
+      - .php
+      - .module
+      - .inc
+
+  - id: theme_preprocess_db
+    severity: warning
+    category: performance
+    message: "A database query or entity load inside a theme preprocess function runs on every page render. Move the query to a controller or use a lazy builder."
+    pattern: '(function\s+\w+_preprocess_\w+).*(\\\Drupal::database|\\\Drupal::entityTypeManager|->getStorage|::load\s*\(|db_select|db_query)'
+    multiline: true
+    file_types:
+      - .php
+      - .module
+      - .theme
+
+  - id: twig_dump_debug
+    severity: warning
+    category: performance
+    message: "The {{ dump() }} or {{ kint() }} function is present in a Twig template. Remove debugging output before deploying to production."
+    pattern: '\{\{?\s*(dump|kint)\s*\('
+    file_types:
+      - .twig
+
+  - id: twig_inline_styles
+    severity: warning
+    category: performance
+    message: "Inline style= attributes in Twig templates bypass Drupal's CSS aggregation and make theming harder to maintain. Move styles to a CSS file and attach via *.libraries.yml."
+    pattern: 'style\s*=\s*["\x27]'
+    file_types:
+      - .twig
+
+  - id: user_cache_context_broad
+    severity: warning
+    category: performance
+    message: "The broad 'user' cache context varies the cache per-user, creating a unique cache entry for every authenticated user. Use a more specific context like 'user.roles' or 'user.permissions' where possible."
+    pattern: "(cache.*contexts.*['\"]user['\"]|addCacheContexts.*['\"]user['\"])"
+    file_types:
+      - .php
+      - .module
+      - .inc
+      - .theme

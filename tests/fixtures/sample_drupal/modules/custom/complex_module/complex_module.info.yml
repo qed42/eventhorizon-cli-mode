@@ -1,0 +1,5 @@
+name: Complex Module
+type: module
+description: 'Test module with high-complexity functions for code metrics testing.'
+core_version_requirement: ^10 || ^11
+package: Testing

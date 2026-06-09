@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - text
+id: node.field_orphaned
+field_name: field_orphaned
+entity_type: node
+type: string
+settings:
+  max_length: 255
+module: core
+locked: false
+cardinality: 1
+translatable: false

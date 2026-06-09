@@ -1,0 +1,5 @@
+name: Contrib Module
+type: module
+description: A sample contrib module.
+core_version_requirement: ^9 || ^10
+package: Contrib
