@@ -33,10 +33,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/qed42/eventhorizon-cli"
-Repository = "https://github.com/qed42/eventhorizon-cli"
-"Bug Tracker" = "https://github.com/qed42/eventhorizon-cli/issues"
-Changelog = "https://github.com/qed42/eventhorizon-cli/blob/master/CHANGELOG.md"
+Homepage = "https://github.com/qed42/eventhorizon-cli-mode"
+Repository = "https://github.com/qed42/eventhorizon-cli-mode"
+"Bug Tracker" = "https://github.com/qed42/eventhorizon-cli-mode/issues"
+Changelog = "https://github.com/qed42/eventhorizon-cli-mode/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

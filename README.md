@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![GitHub stars](https://img.shields.io/github/stars/qed42/eventhorizon-cli?style=social)](https://github.com/qed42/eventhorizon-cli/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/qed42/eventhorizon-cli-mode?style=social)](https://github.com/qed42/eventhorizon-cli-mode/stargazers)
 
 > **Audit your Drupal codebase for security, performance, and code quality — entirely on your own machine.** No source ever leaves your laptop. No AI, no cloud, no telemetry.
 
@@ -15,7 +15,7 @@ A fast, focused command-line tool for **Drupal codebase static analysis**. It sc
 
 **Everything runs locally.** Every rule, metric, and report is computed on your machine — your code is never uploaded to a server, sent to an API, or fed to a model. That makes EventHorizon safe to run on client code, in air-gapped environments, and inside locked-down CI pipelines.
 
-> 🛰️ **This is the open-source CLI edition.** A richer, team-oriented EventHorizon experience is on the horizon — [star the repo](https://github.com/qed42/eventhorizon-cli) to follow along.
+> 🛰️ **This is the open-source CLI edition.** A richer, team-oriented EventHorizon experience is on the horizon — [star the repo](https://github.com/qed42/eventhorizon-cli-mode) to follow along.
 
 ```
   ███████╗██╗   ██╗███████╗███╗   ██╗████████╗
@@ -135,8 +135,8 @@ Measures function-level code quality across PHP files:
 
 ```Shell
 # 1. Get the code
-git clone https://github.com/qed42/eventhorizon-cli.git
-cd eventhorizon-cli
+git clone https://github.com/qed42/eventhorizon-cli-mode.git
+cd eventhorizon-cli-mode
 
 # 2. One-command setup — creates a venv, installs deps, and activates it
 source ./setup.sh
@@ -150,9 +150,9 @@ eh --help
 
 > **Opening a new terminal later?** The `eh` command lives inside the project's virtual environment, so re-activate it first:
 > ```Shell
-> source /path/to/eventhorizon-cli/.venv/bin/activate
+> source /path/to/eventhorizon-cli-mode/.venv/bin/activate
 > ```
-> Tip: add that line to your `~/.zshrc` / `~/.bashrc` to always have `eh` available, or `pipx install /path/to/eventhorizon-cli` for a global, isolated install.
+> Tip: add that line to your `~/.zshrc` / `~/.bashrc` to always have `eh` available, or `pipx install /path/to/eventhorizon-cli-mode` for a global, isolated install.
 
 ***
 
@@ -401,7 +401,7 @@ eventhorizon analyze /path/to/project
 ## Project Structure (EventHorizon CLI source)
 
 ```
-eventhorizon-cli/
+eventhorizon-cli-mode/
 ├── pyproject.toml                          # Package config (PEP 621)
 ├── README.md
 ├── ARCHITECTURE.md                         # Technical architecture

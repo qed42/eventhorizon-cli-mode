@@ -6,8 +6,8 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ```Shell
 # Clone the repo
-git clone https://github.com/qed42/eventhorizon-cli.git
-cd eventhorizon-cli
+git clone https://github.com/qed42/eventhorizon-cli-mode.git
+cd eventhorizon-cli-mode
 
 # One-command setup (creates venv + installs dev deps)
 source setup.sh
