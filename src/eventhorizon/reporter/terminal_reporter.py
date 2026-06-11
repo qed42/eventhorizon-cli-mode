@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from rich.console import Console
 from rich.table import Table
@@ -11,10 +11,10 @@ from eventhorizon.utils.severity import map_severity, severity_sort_key
 
 
 def print_summary(
-    findings: List[Dict[str, Any]],
+    findings: list[dict[str, Any]],
     report_type: str,
     console: Console | None = None,
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """Print a summary table to the terminal and return severity counts.
 
     Args:
@@ -86,7 +86,7 @@ def print_summary(
     if total > 15:
         console.print(f"\n  [dim]... and {total - 15} more issues. See exported files for full report.[/]")
     else:
-        console.print(f"\n  [dim]Messages truncated in terminal. See exported files for full details.[/]")
+        console.print("\n  [dim]Messages truncated in terminal. See exported files for full details.[/]")
 
     console.print()
     return counts

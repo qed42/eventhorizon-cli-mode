@@ -3,7 +3,6 @@
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
 
 log = logging.getLogger("EventHorizon.ModuleFinder")
 
@@ -26,21 +25,21 @@ class DrupalModule:
 class DiscoveryResult:
     """Result of module discovery across all scan targets."""
 
-    modules: List[DrupalModule] = field(default_factory=list)
-    scan_targets: List[str] = field(default_factory=list)
+    modules: list[DrupalModule] = field(default_factory=list)
+    scan_targets: list[str] = field(default_factory=list)
 
     @property
-    def custom_modules(self) -> List[DrupalModule]:
+    def custom_modules(self) -> list[DrupalModule]:
         return [m for m in self.modules if m.group == "custom"]
 
     @property
-    def contrib_modules(self) -> List[DrupalModule]:
+    def contrib_modules(self) -> list[DrupalModule]:
         return [m for m in self.modules if m.group == "contrib"]
 
 
 def discover_modules(
     drupal_root: Path,
-    scan_targets: List[str],
+    scan_targets: list[str],
     group_label: str = "custom",
 ) -> DiscoveryResult:
     """Find all Drupal modules/themes under the given scan target directories.

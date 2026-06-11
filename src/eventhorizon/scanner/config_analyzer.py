@@ -7,7 +7,7 @@ and builds a relationship map.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 
@@ -19,7 +19,7 @@ class DrupalConfigAnalyzer:
 
     def __init__(self, config_sync_dir: str) -> None:
         self.config_dir = Path(config_sync_dir)
-        self._configs: Dict[str, Any] = {}
+        self._configs: dict[str, Any] = {}
         self._load_all_configs()
 
     def _load_all_configs(self) -> None:
@@ -37,7 +37,7 @@ class DrupalConfigAnalyzer:
             except (OSError, yaml.YAMLError) as e:
                 log.warning(f"Failed to parse config file {yml_file.name}: {e}")
 
-    def analyze_all_configs(self) -> Dict[str, Any]:
+    def analyze_all_configs(self) -> dict[str, Any]:
         """Analyze all config files and return structured data."""
         return {
             "content_types": self.parse_content_types(),
@@ -49,7 +49,7 @@ class DrupalConfigAnalyzer:
             "relationships": self.build_relationships(),
         }
 
-    def parse_content_types(self) -> List[Dict[str, Any]]:
+    def parse_content_types(self) -> list[dict[str, Any]]:
         """Parse node.type.* config files."""
         types = []
         for name, data in self._configs.items():
@@ -62,7 +62,7 @@ class DrupalConfigAnalyzer:
                 })
         return types
 
-    def parse_block_types(self) -> List[Dict[str, Any]]:
+    def parse_block_types(self) -> list[dict[str, Any]]:
         """Parse block_content.type.* config files."""
         types = []
         for name, data in self._configs.items():
@@ -75,7 +75,7 @@ class DrupalConfigAnalyzer:
                 })
         return types
 
-    def parse_paragraphs(self) -> List[Dict[str, Any]]:
+    def parse_paragraphs(self) -> list[dict[str, Any]]:
         """Parse paragraphs.paragraphs_type.* config files."""
         types = []
         for name, data in self._configs.items():
@@ -91,10 +91,10 @@ class DrupalConfigAnalyzer:
                 })
         return types
 
-    def parse_fields(self) -> Dict[str, Any]:
+    def parse_fields(self) -> dict[str, Any]:
         """Parse field.storage.* and field.field.* config files."""
-        storages: List[Dict[str, Any]] = []
-        instances: List[Dict[str, Any]] = []
+        storages: list[dict[str, Any]] = []
+        instances: list[dict[str, Any]] = []
 
         for name, data in self._configs.items():
             if name.startswith("field.storage."):
@@ -115,7 +115,7 @@ class DrupalConfigAnalyzer:
                 entity_type = parts[0] if parts else ""
                 bundle = parts[1] if len(parts) > 1 else ""
                 field_name = parts[2] if len(parts) > 2 else ""
-                storages_ref = data.get("field_storage_config_id", "")
+                data.get("field_storage_config_id", "")
                 instances.append({
                     "id": name,
                     "entity_type": entity_type,
@@ -130,7 +130,7 @@ class DrupalConfigAnalyzer:
 
         return {"storages": storages, "instances": instances}
 
-    def parse_views(self) -> List[Dict[str, Any]]:
+    def parse_views(self) -> list[dict[str, Any]]:
         """Parse views.view.* config files."""
         views = []
         for name, data in self._configs.items():
@@ -147,7 +147,7 @@ class DrupalConfigAnalyzer:
                 })
         return views
 
-    def parse_taxonomies(self) -> List[Dict[str, Any]]:
+    def parse_taxonomies(self) -> list[dict[str, Any]]:
         """Parse taxonomy.vocabulary.* config files."""
         vocabs = []
         for name, data in self._configs.items():
@@ -160,7 +160,7 @@ class DrupalConfigAnalyzer:
                 })
         return vocabs
 
-    def build_relationships(self) -> List[Dict[str, Any]]:
+    def build_relationships(self) -> list[dict[str, Any]]:
         """Build relationships between entities based on field references."""
         relationships = []
         fields = self.parse_fields()

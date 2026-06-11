@@ -7,7 +7,6 @@ import pytest
 from eventhorizon.scanner.config_analyzer import DrupalConfigAnalyzer
 from eventhorizon.scanner.config_validator import (
     DrupalConfigValidator,
-    ValidationIssue,
     run_config_validation,
 )
 

@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -15,7 +15,7 @@ HEADERS = ["Category", "Severity", "File", "Line", "Rule", "Message", "Tool", "R
 
 
 def export_xlsx(
-    findings: List[Dict[str, Any]],
+    findings: list[dict[str, Any]],
     output_path: Path,
 ) -> Path:
     """Write findings to an XLSX file with bold headers.

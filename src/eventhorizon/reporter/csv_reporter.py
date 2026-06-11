@@ -3,7 +3,7 @@
 import csv
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from eventhorizon.utils.severity import map_severity
 
@@ -13,7 +13,7 @@ HEADERS = ["Category", "Severity", "File", "Line", "Rule", "Message", "Tool", "R
 
 
 def export_csv(
-    findings: List[Dict[str, Any]],
+    findings: list[dict[str, Any]],
     output_path: Path,
 ) -> Path:
     """Write findings to a CSV file.

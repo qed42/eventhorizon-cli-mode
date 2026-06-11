@@ -1,17 +1,16 @@
 """Severity level mapping utilities."""
 
-from typing import Dict
 
 # Maps internal severity values to display labels.
 # "critical" is reserved for future use — no scanner currently emits it.
-SEVERITY_MAP: Dict[str, str] = {
+SEVERITY_MAP: dict[str, str] = {
     "error": "High",
     "warning": "Medium",
     "info": "Low",
 }
 
 # Ordering for sorting (lower number = higher priority)
-SEVERITY_ORDER: Dict[str, int] = {
+SEVERITY_ORDER: dict[str, int] = {
     "error": 0,
     "High": 0,
     "warning": 1,

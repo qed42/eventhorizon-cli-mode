@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from eventhorizon.scanner.static_analyzer import StaticAnalyzer, _load_rules
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "sample_drupal"

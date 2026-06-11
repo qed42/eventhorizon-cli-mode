@@ -42,7 +42,10 @@ Changelog = "https://github.com/qed42/eventhorizon-cli-mode/blob/master/CHANGELO
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
-    "ruff>=0.4.0",
+    # Pinned to a compatible release: new ruff minors add rules, which would
+    # make `ruff check` fail on unchanged code. Bump deliberately, fixing any
+    # new findings in the same PR. Keep in sync with .github/workflows/lint.yml.
+    "ruff~=0.15.7",
 ]
 
 [project.scripts]
