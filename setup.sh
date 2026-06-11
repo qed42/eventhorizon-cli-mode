@@ -2,9 +2,17 @@
 # EventHorizon CLI — one-command setup
 
 # Resolve script directory before anything else.
-# When sourced, $0 may be the shell itself (bash) or the script (zsh).
-# BASH_SOURCE is reliable in bash; fall back to $0 for zsh.
-_eh_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# When sourced, $0 may be the shell itself (bash/zsh) or the script path.
+# BASH_SOURCE[0] works in bash; ${(%):-%x} works in zsh; fall back to $0.
+if [ -n "${BASH_SOURCE[0]+set}" ]; then
+    _eh_script="${BASH_SOURCE[0]}"
+elif [ -n "${ZSH_VERSION+set}" ]; then
+    _eh_script="${(%):-%x}"
+else
+    _eh_script="$0"
+fi
+_eh_dir="$(cd "$(dirname "$_eh_script")" && pwd)"
+unset _eh_script
 
 # ── Check for Python 3 ──────────────────────────────────────────
 if ! command -v python3 &>/dev/null; then
@@ -37,23 +45,34 @@ fi
 echo "Setting up EventHorizon CLI... (Python $PY_VERSION)"
 
 # ── Create venv and install ──────────────────────────────────────
-# Run in a subshell so cd/failures don't affect the parent shell.
-(
-    set -e
-    cd "$_eh_dir"
-    python3 -m venv .venv
-    # shellcheck disable=SC1091
-    source .venv/bin/activate
-    pip install -e ".[dev]" --quiet
-)
+# Use absolute paths throughout — no subshell, no cd needed.
 
+echo "[1/3] Creating virtual environment..."
+rm -rf "$_eh_dir/.venv"
+python3 -m venv "$_eh_dir/.venv"
 if [ $? -ne 0 ]; then
-    echo "ERROR: Setup failed. Check the output above."
+    echo "ERROR: Failed to create virtual environment."
     unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR
     return 1 2>/dev/null || exit 1
 fi
 
-# Activate the venv in the current shell (outside the subshell).
+echo "[2/3] Upgrading pip..."
+"$_eh_dir/.venv/bin/pip" install --upgrade pip setuptools wheel
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to upgrade pip."
+    unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR
+    return 1 2>/dev/null || exit 1
+fi
+
+echo "[3/3] Installing eventhorizon..."
+"$_eh_dir/.venv/bin/pip" install -e "$_eh_dir/.[dev]"
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to install eventhorizon."
+    unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR
+    return 1 2>/dev/null || exit 1
+fi
+
+# Activate the venv in the current shell.
 # shellcheck disable=SC1091
 source "$_eh_dir/.venv/bin/activate"
 
