@@ -1,0 +1,39 @@
+name: dco
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dco:
+    name: Signed-off-by check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all commits for DCO sign-off
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            // Bot commits (e.g. dependabot) cannot sign off — exempt them,
+            // matching the behavior of the official DCO app.
+            const missing = commits.filter(c =>
+              c.author?.type !== 'Bot' &&
+              !/^Signed-off-by: .+ <.+@.+>$/m.test(c.commit.message)
+            );
+            if (missing.length) {
+              const list = missing
+                .map(c => `  ${c.sha.slice(0, 7)} ${c.commit.message.split('\n')[0]}`)
+                .join('\n');
+              core.setFailed(
+                `${missing.length} commit(s) missing a Signed-off-by line (see CONTRIBUTING.md):\n${list}\n\n` +
+                `Fix for a single commit:  git commit --amend -s && git push --force-with-lease\n` +
+                `Fix for multiple commits: git rebase --signoff origin/master && git push --force-with-lease`
+              );
+            }

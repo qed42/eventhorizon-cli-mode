@@ -54,6 +54,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 eventhorizon = ["scanner/rules/*.yml", "py.typed"]
+"eventhorizon.scanner.rules" = ["*.yml"]
 
 [tool.ruff]
 target-version = "py39"

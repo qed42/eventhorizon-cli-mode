@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/qed42/eventhorizon-cli-mode/security/policy
+    about: Please report security issues privately via our security policy, not as public issues.

@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # Keep pinned action versions (checkout, setup-python, github-script) patched.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # Python deps from pyproject.toml. Monthly to keep PR noise low on a small project.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5

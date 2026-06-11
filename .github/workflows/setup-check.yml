@@ -1,0 +1,71 @@
+name: setup-check
+
+on:
+  pull_request:
+    paths:
+      - 'setup.sh'
+      - 'pyproject.toml'
+      - '.github/workflows/setup-check.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'setup.sh'
+      - 'pyproject.toml'
+      - '.github/workflows/setup-check.yml'
+
+jobs:
+  setup:
+    name: ${{ matrix.os }} / ${{ matrix.run-shell }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The two shells the README supports, on their home platforms
+          - os: ubuntu-latest
+            run-shell: bash
+            python: '3.12'
+          - os: macos-latest
+            run-shell: zsh
+            python: '3.12'
+          # Floor version from pyproject.toml — catches old-toolchain breakage
+          - os: ubuntu-latest
+            run-shell: bash
+            python: '3.9'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: source setup.sh and run eh (bash)
+        if: matrix.run-shell == 'bash'
+        shell: bash
+        run: |
+          source ./setup.sh
+          eh --help
+          eventhorizon --help
+          # Re-source must be idempotent: a second run may not destroy or
+          # needlessly rebuild a working venv.
+          source ./setup.sh
+          eh --help
+
+      - name: source setup.sh and run eh (zsh)
+        if: matrix.run-shell == 'zsh'
+        shell: zsh {0}
+        run: |
+          source ./setup.sh
+          eh --help
+          eventhorizon --help
+          source ./setup.sh
+          eh --help
+
+      - name: executed mode also works (./setup.sh)
+        if: matrix.run-shell == 'bash'
+        shell: bash
+        run: |
+          rm -rf .venv
+          ./setup.sh
+          source .venv/bin/activate
+          eh --help

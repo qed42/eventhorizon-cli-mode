@@ -1,0 +1,9 @@
+# Code owners are automatically requested for review on every PR touching
+# matching paths. To make their approval mandatory, enable
+# "Require review from Code Owners" in branch protection for master.
+#
+# Later, split ownership by path as maintainers join, e.g.:
+#   setup.sh            @souvik21
+#   src/eventhorizon/   @someone-else
+
+* @souvik21

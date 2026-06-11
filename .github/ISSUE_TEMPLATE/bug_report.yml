@@ -1,0 +1,87 @@
+name: Bug report
+description: Something in EventHorizon CLI is not working as expected
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command you ran
+      description: Include how you installed too — `source ./setup.sh` or executed `./setup.sh`?
+      render: shell
+      placeholder: |
+        source ./setup.sh
+        eh ../my-drupal-project
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Full output / error message
+      description: Paste everything, not just the last line — the full output is usually where the answer is.
+      render: shell
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows (WSL)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: shell
+    attributes:
+      label: Shell and version
+      description: "`echo $SHELL` and `$SHELL --version` — plus any framework (oh-my-zsh, prezto) or `emulate sh` in your dotfiles"
+      placeholder: zsh 5.9, oh-my-zsh
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python and pip versions
+      description: "`python3 --version && python3 -m pip --version`"
+      placeholder: Python 3.12.4, pip 24.0
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: EventHorizon version
+      placeholder: 0.1.0, or the master commit hash
+    validations:
+      required: true
+
+  - type: textarea
+    id: project-layout
+    attributes:
+      label: Drupal project layout (if the bug is about scanning)
+      description: Standard composer, restricted, or multisite? Roughly how many custom/contrib modules?
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this has not been reported
+          required: true
+        - label: I can reproduce this on the latest master
+          required: false
