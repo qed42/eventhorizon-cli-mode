@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 from importlib.resources import files as pkg_files
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import yaml
 
@@ -21,11 +21,11 @@ MAX_FILE_SIZE = 200 * 1024 * 1024  # 200 MB
 
 
 @functools.lru_cache(maxsize=1)
-def _load_rules() -> List[Dict[str, Any]]:
+def _load_rules() -> list[dict[str, Any]]:
     """Load custom rules from the bundled YAML file."""
     rules_path = pkg_files("eventhorizon.scanner.rules").joinpath("custom_rules.yml")
     try:
-        with open(str(rules_path), "r") as f:
+        with open(str(rules_path)) as f:
             data = yaml.safe_load(f)
             return (data or {}).get("custom_checks", [])
     except (OSError, yaml.YAMLError) as e:
@@ -33,7 +33,7 @@ def _load_rules() -> List[Dict[str, Any]]:
         return []
 
 
-def _compile_rules(rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _compile_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Pre-compile regex patterns and index rules by file extension."""
     compiled = []
     for rule in rules:
@@ -50,20 +50,20 @@ def _compile_rules(rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return compiled
 
 
-def _index_rules_by_ext(compiled_rules: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+def _index_rules_by_ext(compiled_rules: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     """Group compiled rules by file extension for file-first scanning.
 
     Handles compound extensions like '.routing.yml' and '.libraries.yml'
     by indexing under the simple suffix (e.g. '.yml') as well.
     """
-    by_ext: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    by_ext: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for rule in compiled_rules:
         for ext in rule.get("file_types", []):
             by_ext[ext].append(rule)
     return dict(by_ext)
 
 
-def _get_matching_exts(file_path: Path, scannable_exts: set) -> List[str]:
+def _get_matching_exts(file_path: Path, scannable_exts: set) -> list[str]:
     """Return all matching extension keys for a file, handling compound extensions."""
     matched = []
     name = file_path.name
@@ -80,7 +80,7 @@ def _get_matching_exts(file_path: Path, scannable_exts: set) -> List[str]:
 class StaticAnalyzer:
     """Runs custom, file-based static analysis checks against a Drupal codebase."""
 
-    def __init__(self, drupal_root: str, scan_targets: List[str], filter_name: str) -> None:
+    def __init__(self, drupal_root: str, scan_targets: list[str], filter_name: str) -> None:
         self.drupal_root = Path(drupal_root).resolve()
         self.filter_name = filter_name
         self.scan_targets = [
@@ -94,7 +94,7 @@ class StaticAnalyzer:
         self._compiled_rules = _compile_rules(rules)
         self._rules_by_ext = _index_rules_by_ext(self._compiled_rules)
 
-    def run_custom_checks(self, progress_callback: Optional[Callable[[str], None]] = None) -> List[Finding]:
+    def run_custom_checks(self, progress_callback: Optional[Callable[[str], None]] = None) -> list[Finding]:
         """Scan files against YAML-defined regex rules.
 
         Args:
@@ -103,7 +103,7 @@ class StaticAnalyzer:
         if not self._compiled_rules or not self.scan_targets:
             return []
 
-        findings: List[Finding] = []
+        findings: list[Finding] = []
         scannable_exts = set(self._rules_by_ext.keys())
 
         for target_dir_str in self.scan_targets:
@@ -129,7 +129,7 @@ class StaticAnalyzer:
 
                 # Collect rules from all matching extensions, dedup by id
                 seen_rule_ids: set = set()
-                applicable_rules: List[Dict[str, Any]] = []
+                applicable_rules: list[dict[str, Any]] = []
                 for ext in matched_exts:
                     for rule in self._rules_by_ext[ext]:
                         rid = id(rule)
@@ -144,7 +144,7 @@ class StaticAnalyzer:
                     continue
 
                 relative_path = file_path.relative_to(self.drupal_root).as_posix()
-                lines: Optional[List[str]] = None
+                lines: Optional[list[str]] = None
 
                 for rule in applicable_rules:
                     pattern = rule["_compiled"]
@@ -178,7 +178,7 @@ class StaticAnalyzer:
         log.info(f"Custom scan complete. Found {len(findings)} issues.")
         return findings
 
-    def run_all_scans(self, progress_callback: Optional[Callable[[str], None]] = None) -> List[Finding]:
+    def run_all_scans(self, progress_callback: Optional[Callable[[str], None]] = None) -> list[Finding]:
         """Run all scans and return a flat list of findings."""
         log.info(f"Starting static analysis on targets: {self.scan_targets}")
         findings = self.run_custom_checks(progress_callback=progress_callback)

@@ -4,7 +4,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any
 
 import click
 from rich.console import Console
@@ -24,7 +24,6 @@ from eventhorizon.utils.drupal_detection import (
     detect_project_structure,
     flatten_targets,
 )
-from eventhorizon.utils.severity import map_severity
 
 
 def _setup_logging(verbose: bool) -> None:
@@ -39,7 +38,7 @@ def _setup_logging(verbose: bool) -> None:
 class _DefaultGroup(click.Group):
     """Click group that defaults to 'analyze' when an unknown subcommand is given."""
 
-    def parse_args(self, ctx: click.Context, args: List[str]) -> List[str]:
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
         # If the first arg isn't a registered command or option, prepend 'analyze'
         if args and not args[0].startswith("-") and args[0] not in self.commands:
             args = ["analyze"] + args
@@ -175,8 +174,8 @@ def analyze(
         stderr_console.print("[yellow]Warning:[/] No modules discovered. Check that the path contains .info.yml files.")
 
     # --- Run Scans ---
-    all_findings: List[Dict[str, Any]] = []
-    scanned_files: Set[str] = set()
+    all_findings: list[dict[str, Any]] = []
+    scanned_files: set[str] = set()
 
     def _progress_callback(file_path: str) -> None:
         scanned_files.add(file_path)
@@ -243,7 +242,7 @@ def analyze(
     # Derive project name from directory
     project_name = drupal_root.name.replace(" ", "_").lower()
     out_path = Path(output_dir)
-    exported_files: List[str] = []
+    exported_files: list[str] = []
 
     has_high = False
 

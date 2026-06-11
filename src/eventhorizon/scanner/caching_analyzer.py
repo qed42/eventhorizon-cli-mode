@@ -4,10 +4,11 @@ Context-aware Drupal caching issue analyzer.
 All findings are normalized to the standard finding dict format.
 """
 
+import contextlib
 import logging
 import re
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from eventhorizon.scanner.types import Finding
 
@@ -19,7 +20,7 @@ MAX_FILE_SIZE = 200 * 1024 * 1024  # 200 MB
 class DrupalContextDetector:
     """Detects Drupal-specific code contexts for accurate analysis."""
 
-    def identify_context(self, content: str, file_path: str) -> Dict:
+    def identify_context(self, content: str, file_path: str) -> dict:
         context = {
             "type": "unknown",
             "hooks": [],
@@ -81,19 +82,19 @@ class SmartCachingAnalyzer:
             self._detect_block_cacheability_leak,
         ]
 
-    def analyze_file(self, file_path: Path) -> List[Dict]:
+    def analyze_file(self, file_path: Path) -> list[dict]:
         """Analyze a single file for caching issues."""
         try:
             with file_path.open("r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
-        except (UnicodeDecodeError, IOError) as e:
+        except (OSError, UnicodeDecodeError) as e:
             return [{
                 "type": "file_error", "severity": "warning", "line": 1,
                 "message": f"Error reading file: {e}", "file_path": str(file_path),
             }]
 
         context = self.context_detector.identify_context(content, str(file_path))
-        issues: List[Dict] = []
+        issues: list[dict] = []
 
         for detector_func in self.critical_patterns:
             try:
@@ -105,7 +106,7 @@ class SmartCachingAnalyzer:
 
     # --- Detectors ---
 
-    def _detect_missing_render_cache(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_missing_render_cache(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         render_patterns = [
             r"return\s+\[\s*['\"]#(theme|markup|template|type|prefix|suffix)['\"].*?\];",
@@ -132,7 +133,7 @@ class SmartCachingAnalyzer:
                     ))
         return issues
 
-    def _detect_improper_user_context(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_improper_user_context(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         user_patterns = [r"\$user->", r"current_user\(\)", r"user_access\(", r"user_load\("]
         for pattern in user_patterns:
@@ -146,7 +147,7 @@ class SmartCachingAnalyzer:
                     ))
         return issues
 
-    def _detect_user_context_overuse(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_user_context_overuse(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         pattern = r"'contexts'\s*=>\s*\[.*?'user'(?!\.[a-z])"
         for match in re.finditer(pattern, content, re.DOTALL):
@@ -161,7 +162,7 @@ class SmartCachingAnalyzer:
                 ))
         return issues
 
-    def _detect_early_rendering(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_early_rendering(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         for pattern in [r"drupal_render\s*\(", r"render\(\s*\$"]:
             for match in re.finditer(pattern, content):
@@ -174,7 +175,7 @@ class SmartCachingAnalyzer:
                     ))
         return issues
 
-    def _detect_uncached_database_queries(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_uncached_database_queries(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         query_patterns = [
             (r"\\?Drupal::entityQuery", "Entity query"),
@@ -190,17 +191,18 @@ class SmartCachingAnalyzer:
                 func_ctx = self._get_function_context(content, match.start())
                 if any(ctx in func_ctx.get("code", "").lower() for ctx in acceptable):
                     continue
-                if self._is_expensive_render_context(func_ctx, context):
-                    if not self._has_caching_nearby(content, match.start()):
-                        line_num = content[: match.start()].count("\n") + 1
-                        issues.append(self._make_finding(
-                            "uncached_database_query", "warning",
-                            line_num, file_path,
-                            f"Uncached database operation ({desc}) in performance-critical context.",
-                        ))
+                if self._is_expensive_render_context(func_ctx, context) and not self._has_caching_nearby(
+                    content, match.start()
+                ):
+                    line_num = content[: match.start()].count("\n") + 1
+                    issues.append(self._make_finding(
+                        "uncached_database_query", "warning",
+                        line_num, file_path,
+                        f"Uncached database operation ({desc}) in performance-critical context.",
+                    ))
         return issues
 
-    def _detect_missing_cache_tags(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_missing_cache_tags(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         for match in re.finditer(r"#cache\s*=>\s*\[([^\]]+)\]", content, re.DOTALL):
             cache_content = match.group(1)
@@ -212,7 +214,7 @@ class SmartCachingAnalyzer:
                 ))
         return issues
 
-    def _detect_missed_drupal_static_opportunity(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_missed_drupal_static_opportunity(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         func_pattern = r"function\s+(\w+)\s*\((.*?)\)\s*\{"
         expensive_ops = r"->getStorage.*?->load|entityQuery|db_query"
@@ -235,11 +237,12 @@ class SmartCachingAnalyzer:
                     issues.append(self._make_finding(
                         "missed_drupal_static", "info",
                         content[: func_match.start()].count("\n") + 1, file_path,
-                        f'Function "{func_name}" has expensive ops and is called multiple times — consider drupal_static.',
+                        f'Function "{func_name}" has expensive ops and is called multiple times'
+                        " — consider drupal_static.",
                     ))
         return issues
 
-    def _detect_cache_bin_opportunity(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_cache_bin_opportunity(self, content: str, file_path: str, context: dict) -> list[dict]:
         default_bin_calls = re.findall(r"->cache\(\s*\)\s*->|cache_get\s*\(|cache_set\s*\(", content)
         if len(default_bin_calls) > 3:
             return [self._make_finding(
@@ -248,7 +251,7 @@ class SmartCachingAnalyzer:
             )]
         return []
 
-    def _detect_missing_specific_contexts(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_missing_specific_contexts(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         for match in re.finditer(r"#cache\s*=>\s*\[([^\]]+)\]", content, re.DOTALL):
             cache_block = match.group(1)
@@ -260,9 +263,12 @@ class SmartCachingAnalyzer:
                 ))
         return issues
 
-    def _detect_missing_entity_tags(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_missing_entity_tags(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
-        load_pattern = r"\b(Node|User|Term)::load\(\s*\$(\w+)\s*\)|->getStorage\(['\"](\w+)['\"]\)->load\(\s*\$(\w+)\s*\)"
+        load_pattern = (
+            r"\b(Node|User|Term)::load\(\s*\$(\w+)\s*\)"
+            r"|->getStorage\(['\"](\w+)['\"]\)->load\(\s*\$(\w+)\s*\)"
+        )
         for load_match in re.finditer(load_pattern, content):
             entity_type = (load_match.group(1) or load_match.group(3)).lower()
             surrounding = self._get_surrounding_code(content, load_match.start(), 800)
@@ -276,7 +282,7 @@ class SmartCachingAnalyzer:
                     ))
         return issues
 
-    def _detect_bigpipe_opportunity(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_bigpipe_opportunity(self, content: str, file_path: str, context: dict) -> list[dict]:
         issues = []
         pattern = r"#cache\s*=>\s*\[[^\]]*?(max-age\s*=>\s*0|['\"]user['\"](?!\.))"
         for match in re.finditer(pattern, content, re.DOTALL):
@@ -289,7 +295,7 @@ class SmartCachingAnalyzer:
 
     # --- Deep caching detectors ---
 
-    def _detect_cacheable_metadata_bubbling(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_cacheable_metadata_bubbling(self, content: str, file_path: str, context: dict) -> list[dict]:
         """Detect array_merge on render arrays that loses cache metadata."""
         issues = []
         pattern = r"array_merge\s*\([^)]*\$\w+.*?\)"
@@ -297,19 +303,24 @@ class SmartCachingAnalyzer:
             if self._is_commented_code(content, match.start()):
                 continue
             surrounding = self._get_surrounding_code(content, match.start(), 600)
-            if re.search(r"#(theme|markup|type|cache)", surrounding):
-                if not re.search(r"addCacheableDependency|CacheableMetadata::createFromRenderArray", surrounding):
-                    issues.append(self._make_finding(
-                        "metadata_bubbling_lost", "warning",
-                        content[: match.start()].count("\n") + 1, file_path,
-                        "array_merge() on render arrays loses cache metadata. Use addCacheableDependency() to preserve cacheability.",
-                    ))
+            if re.search(r"#(theme|markup|type|cache)", surrounding) and not re.search(
+                r"addCacheableDependency|CacheableMetadata::createFromRenderArray", surrounding
+            ):
+                issues.append(self._make_finding(
+                    "metadata_bubbling_lost", "warning",
+                    content[: match.start()].count("\n") + 1, file_path,
+                    "array_merge() on render arrays loses cache metadata."
+                    " Use addCacheableDependency() to preserve cacheability.",
+                ))
         return issues
 
-    def _detect_dependency_chain_break(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_dependency_chain_break(self, content: str, file_path: str, context: dict) -> list[dict]:
         """Detect entity loaded but its cache tag not propagated to the returned render array."""
         issues = []
-        entity_load_pattern = r"(\$\w+)\s*=\s*(?:(?:Node|User|Term|Media)::load\(|->getStorage\(['\"][\w]+['\"]\)->load\()"
+        entity_load_pattern = (
+            r"(\$\w+)\s*=\s*"
+            r"(?:(?:Node|User|Term|Media)::load\(|->getStorage\(['\"][\w]+['\"]\)->load\()"
+        )
         for match in re.finditer(entity_load_pattern, content):
             var_name = match.group(1)
             if self._is_commented_code(content, match.start()):
@@ -331,7 +342,7 @@ class SmartCachingAnalyzer:
                     ))
         return issues
 
-    def _detect_stale_cache_tag_pattern(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_stale_cache_tag_pattern(self, content: str, file_path: str, context: dict) -> list[dict]:
         """Detect only list-level tags without entity-specific tags — causes over-invalidation."""
         issues = []
         cache_tag_pattern = r"'tags'\s*=>\s*\[([^\]]+)\]"
@@ -351,7 +362,7 @@ class SmartCachingAnalyzer:
                     ))
         return issues
 
-    def _detect_render_rebuilt_every_request(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_render_rebuilt_every_request(self, content: str, file_path: str, context: dict) -> list[dict]:
         """Detect hook_page_attachments/hook_page_build with no #cache metadata."""
         issues = []
         hook_patterns = [
@@ -382,7 +393,7 @@ class SmartCachingAnalyzer:
                     ))
         return issues
 
-    def _detect_block_cacheability_leak(self, content: str, file_path: str, context: Dict) -> List[Dict]:
+    def _detect_block_cacheability_leak(self, content: str, file_path: str, context: dict) -> list[dict]:
         """Detect BlockBase::build() using currentUser/request without matching cache contexts."""
         issues = []
         if context.get("type") != "block_plugin" and "@Block" not in content:
@@ -401,12 +412,14 @@ class SmartCachingAnalyzer:
                 pos += 1
             func_body = content[func_body_start : pos - 1]
             leaks = []
-            if re.search(r"\\?Drupal::currentUser\(\)|->currentUser\(\)", func_body):
-                if not re.search(r"'user'|'user\.", func_body):
-                    leaks.append("\\Drupal::currentUser() without user cache context")
-            if re.search(r"\\?Drupal::request\(\)|->getRequest\(\)", func_body):
-                if not re.search(r"'url\.|'route\.", func_body):
-                    leaks.append("\\Drupal::request() without url/route cache context")
+            if re.search(r"\\?Drupal::currentUser\(\)|->currentUser\(\)", func_body) and not re.search(
+                r"'user'|'user\.", func_body
+            ):
+                leaks.append("\\Drupal::currentUser() without user cache context")
+            if re.search(r"\\?Drupal::request\(\)|->getRequest\(\)", func_body) and not re.search(
+                r"'url\.|'route\.", func_body
+            ):
+                leaks.append("\\Drupal::request() without url/route cache context")
             for leak in leaks:
                 issues.append(self._make_finding(
                     "block_cacheability_leak", "warning",
@@ -418,7 +431,7 @@ class SmartCachingAnalyzer:
     # --- Helpers ---
 
     @staticmethod
-    def _make_finding(rule: str, severity: str, line: int, file_path: str, message: str) -> Dict[str, Any]:
+    def _make_finding(rule: str, severity: str, line: int, file_path: str, message: str) -> dict[str, Any]:
         """Create a normalized finding dict matching the standard format."""
         return {
             "tool": "caching_analyzer",
@@ -431,7 +444,7 @@ class SmartCachingAnalyzer:
         }
 
     @staticmethod
-    def _prioritize_issues(issues: List[Dict]) -> List[Dict]:
+    def _prioritize_issues(issues: list[dict]) -> list[dict]:
         order = {"error": 0, "warning": 1, "info": 2}
         return sorted(issues, key=lambda x: order.get(x.get("severity", "info"), 3))
 
@@ -442,7 +455,7 @@ class SmartCachingAnalyzer:
         return content[start:end]
 
     @staticmethod
-    def _get_function_context(content: str, position: int) -> Dict:
+    def _get_function_context(content: str, position: int) -> dict:
         lines = content.split("\n")
         current_line = content[:position].count("\n")
         function_start, function_type = current_line, "unknown"
@@ -455,7 +468,11 @@ class SmartCachingAnalyzer:
                 function_type, function_start = "method", i
                 break
         function_end = min(len(lines), function_start + 20)
-        return {"type": function_type, "start_line": function_start + 1, "code": "\n".join(lines[function_start:function_end])}
+        return {
+            "type": function_type,
+            "start_line": function_start + 1,
+            "code": "\n".join(lines[function_start:function_end]),
+        }
 
     @staticmethod
     def _is_render_context(code: str) -> bool:
@@ -470,7 +487,7 @@ class SmartCachingAnalyzer:
         return bool(re.search(r"\$user->|current_user\(\)|user_access\(", code, re.DOTALL))
 
     @staticmethod
-    def _is_problematic_render_context(function_context: Dict, file_context: Dict) -> bool:
+    def _is_problematic_render_context(function_context: dict, file_context: dict) -> bool:
         problematic = ["controller", "hook_menu", "hook_init", "hook_preprocess"]
         if any(ctx in function_context["code"].lower() for ctx in problematic):
             return True
@@ -479,11 +496,13 @@ class SmartCachingAnalyzer:
         return any(hook["type"] in ["menu", "init", "preprocess"] for hook in file_context.get("hooks", []))
 
     @staticmethod
-    def _is_expensive_render_context(function_context: Dict, file_context: Dict) -> bool:
+    def _is_expensive_render_context(function_context: dict, file_context: dict) -> bool:
         expensive = ["hook_menu", "hook_init", "hook_preprocess", "controller::", "build()"]
         if any(p.lower() in function_context.get("code", "").lower() for p in expensive):
             return True
-        return file_context.get("has_expensive_operations", False) or file_context.get("type") in ["controller", "block_plugin"]
+        if file_context.get("has_expensive_operations", False):
+            return True
+        return file_context.get("type") in ["controller", "block_plugin"]
 
     @staticmethod
     def _has_caching_nearby(content: str, position: int, distance: int = 1000) -> bool:
@@ -503,21 +522,22 @@ class SmartCachingAnalyzer:
         if line_content.startswith(("//", "#", "*")):
             return True
         comment_start = content.rfind("/*", 0, position)
-        if comment_start != -1 and (content.find("*/", comment_start, position) == -1 or content.find("*/", comment_start) > position):
-            return True
-        return False
+        return bool(
+            comment_start != -1
+            and (content.find("*/", comment_start, position) == -1 or content.find("*/", comment_start) > position)
+        )
 
 
 def run_caching_analysis(
     drupal_root: Path,
-    scan_targets: List[str],
+    scan_targets: list[str],
     progress_callback: Optional[Callable[[str], None]] = None,
-) -> List[Finding]:
+) -> list[Finding]:
     """Run caching analysis and return normalized findings list."""
     log.info(f"Starting caching analysis on targets: {scan_targets}")
     analyzer = SmartCachingAnalyzer()
 
-    php_files: List[Path] = []
+    php_files: list[Path] = []
     for target_path in scan_targets:
         abs_path = drupal_root / target_path
         if abs_path.is_dir():
@@ -534,7 +554,7 @@ def run_caching_analysis(
                     php_files.append(file_path)
 
     log.info(f"Found {len(php_files)} files for caching analysis.")
-    findings: List[Dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
 
     for file_path in php_files:
         if progress_callback:
@@ -549,10 +569,8 @@ def run_caching_analysis(
                     except ValueError:
                         issue["file"] = issue["file_path"]
                 elif "file" in issue:
-                    try:
+                    with contextlib.suppress(ValueError):
                         issue["file"] = Path(issue["file"]).relative_to(drupal_root).as_posix()
-                    except ValueError:
-                        pass
                 # Ensure standard keys
                 issue.setdefault("tool", "caching_analyzer")
                 issue.setdefault("category", "performance")

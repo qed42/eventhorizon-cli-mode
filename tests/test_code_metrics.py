@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from eventhorizon.scanner.code_metrics import (
     calculate_ccn,
     calculate_loc,

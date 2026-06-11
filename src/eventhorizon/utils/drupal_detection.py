@@ -9,7 +9,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 log = logging.getLogger("EventHorizon.DrupalDetection")
 
@@ -38,13 +38,13 @@ class ProjectStructure:
     project_root: Optional[Path] = None
     webroot: Optional[str] = None  # e.g. "web", "docroot", None
     drupal_root: Optional[Path] = None  # Resolved absolute path scanners receive
-    custom_code_paths: List[str] = field(default_factory=list)  # Project-root-relative
-    module_roots: List[str] = field(default_factory=list)  # Webroot-relative for scanners
-    theme_roots: List[str] = field(default_factory=list)  # Webroot-relative for scanners
+    custom_code_paths: list[str] = field(default_factory=list)  # Project-root-relative
+    module_roots: list[str] = field(default_factory=list)  # Webroot-relative for scanners
+    theme_roots: list[str] = field(default_factory=list)  # Webroot-relative for scanners
     config_path: Optional[str] = None  # Project-root-relative (e.g. "config/sync")
     config_sync_dir: Optional[Path] = None  # Resolved absolute path
-    sites: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    sites: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 def detect_project_structure(user_path: Path) -> ProjectStructure:
@@ -141,13 +141,13 @@ def build_scan_targets(
     structure: ProjectStructure,
     filter_name: str,
     site: Optional[str] = None,
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """Build scanner-ready target dict from a detected project structure.
 
     Returns dict with 'custom' and/or 'contrib' keys mapping to
     lists of webroot-relative path strings that exist on disk.
     """
-    targets: Dict[str, List[str]] = {}
+    targets: dict[str, list[str]] = {}
 
     if site:
         # Multisite: scan site-specific paths
@@ -193,9 +193,9 @@ def build_scan_targets(
     return targets
 
 
-def flatten_targets(targets: Dict[str, List[str]]) -> List[str]:
+def flatten_targets(targets: dict[str, list[str]]) -> list[str]:
     """Flatten a targets dict into a single list of path strings."""
-    result: List[str] = []
+    result: list[str] = []
     for paths in targets.values():
         result.extend(paths)
     return result
@@ -213,7 +213,7 @@ def validate_drupal_path(path: Path) -> bool:
     return structure.valid
 
 
-def detect_scan_targets(drupal_root: Path, filter_name: str) -> Dict[str, List[str]]:
+def detect_scan_targets(drupal_root: Path, filter_name: str) -> dict[str, list[str]]:
     """Auto-detect scan target directories based on filter.
 
     .. deprecated:: Use detect_project_structure() + build_scan_targets() instead.
@@ -312,10 +312,9 @@ def _detect_config_path(project_root: Path, webroot: Optional[str]) -> Optional[
     config_dir = project_root / "config"
     if config_dir.is_dir():
         for entry in sorted(config_dir.iterdir()):
-            if entry.is_dir() and not entry.name.startswith("."):
-                # Verify it has .yml files
-                if any(entry.glob("*.yml")):
-                    return f"config/{entry.name}"
+            # Must be a non-hidden directory that actually contains .yml files
+            if entry.is_dir() and not entry.name.startswith(".") and any(entry.glob("*.yml")):
+                return f"config/{entry.name}"
 
     # Priority 4: sites/default/config/ inside webroot
     if webroot:
@@ -343,12 +342,12 @@ def _detect_multisite(all_roots: set, webroot: Optional[str]) -> set:
 
 
 def _to_scanner_paths(
-    code_paths: List[str],
+    code_paths: list[str],
     webroot_prefix: str,
     webroot: Optional[str],
-) -> List[str]:
+) -> list[str]:
     """Phase 6: Convert project-root-relative paths to webroot-relative scanner paths."""
-    result: List[str] = []
+    result: list[str] = []
     for code_path in code_paths:
         if webroot_prefix and code_path.startswith(webroot_prefix):
             # Inside webroot: strip prefix

@@ -8,7 +8,7 @@ import logging
 import math
 import re
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 from eventhorizon.scanner.types import Finding
 
@@ -80,9 +80,9 @@ def calculate_mi(loc: int, ccn: int) -> float:
     return max(0.0, min(100.0, raw * 100.0 / 171.0))
 
 
-def count_antipatterns(source: str) -> Dict[str, int]:
+def count_antipatterns(source: str) -> dict[str, int]:
     """Count occurrences of Drupal anti-patterns in source code."""
-    counts: Dict[str, int] = {}
+    counts: dict[str, int] = {}
     for pattern_str, name in ANTIPATTERN_PATTERNS:
         matches = re.findall(pattern_str, source)
         if matches:
@@ -103,17 +103,17 @@ def _strip_strings_and_comments(source: str) -> str:
     return result
 
 
-def _extract_function_bodies(source: str) -> List[Tuple[str, str, int]]:
+def _extract_function_bodies(source: str) -> list[tuple[str, str, int]]:
     """Extract PHP function bodies from source code.
 
     Returns list of (function_name, function_body, line_number) tuples.
     """
-    functions: List[Tuple[str, str, int]] = []
+    functions: list[tuple[str, str, int]] = []
     pattern = re.compile(
         r"(?:public|protected|private|static|\s)*\s*function\s+(\w+)\s*\([^)]*\)\s*(?::\s*\S+\s*)?\{",
     )
 
-    lines = source.split("\n")
+    source.split("\n")
     full_text = source
 
     for match in pattern.finditer(full_text):
@@ -141,9 +141,9 @@ def _extract_function_bodies(source: str) -> List[Tuple[str, str, int]]:
 
 def run_code_metrics(
     drupal_root: Path,
-    scan_targets: List[str],
+    scan_targets: list[str],
     progress_callback: Optional[Callable[[str], None]] = None,
-) -> List[Finding]:
+) -> list[Finding]:
     """Run code metrics analysis on PHP files in scan targets.
 
     Args:
@@ -154,7 +154,7 @@ def run_code_metrics(
     Returns:
         List of finding dicts with tool="code_metrics".
     """
-    findings: List[Dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
     root = Path(drupal_root)
 
     for target in scan_targets:
@@ -188,7 +188,7 @@ def run_code_metrics(
 def _scan_php_file(
     file_path: Path,
     root: Path,
-    findings: List[Dict[str, Any]],
+    findings: list[dict[str, Any]],
 ) -> None:
     """Scan a single PHP file for code metrics issues."""
     try:

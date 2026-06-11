@@ -2,10 +2,7 @@
 
 from pathlib import Path
 
-import pytest
-
 from eventhorizon.utils.drupal_detection import (
-    ProjectStructure,
     build_scan_targets,
     detect_project_structure,
     detect_scan_targets,

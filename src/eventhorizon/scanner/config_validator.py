@@ -6,9 +6,9 @@ unused fields, overly complex entities, and missing descriptions.
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 
 from eventhorizon.scanner.config_analyzer import DrupalConfigAnalyzer
 from eventhorizon.scanner.types import Finding
@@ -35,11 +35,11 @@ class ValidationIssue:
 class DrupalConfigValidator:
     """Validates Drupal config for structural issues."""
 
-    def __init__(self, config_data: Dict[str, Any]) -> None:
+    def __init__(self, config_data: dict[str, Any]) -> None:
         self.data = config_data
-        self.issues: List[ValidationIssue] = []
+        self.issues: list[ValidationIssue] = []
 
-    def validate_all(self) -> List[ValidationIssue]:
+    def validate_all(self) -> list[ValidationIssue]:
         """Run all validation checks."""
         self.issues = []
         self.check_orphaned_paragraphs()
@@ -66,7 +66,7 @@ class DrupalConfigValidator:
         instances = fields.get("instances", [])
 
         # Collect paragraph types referenced from non-paragraph entity fields
-        referenced_paragraphs: Set[str] = set()
+        referenced_paragraphs: set[str] = set()
         for inst in instances:
             # Only count references from non-paragraph entities
             if inst.get("entity_type") == "paragraph":
@@ -127,7 +127,7 @@ class DrupalConfigValidator:
         instances = fields.get("instances", [])
 
         # Build adjacency map: paragraph -> set of paragraph types it references
-        graph: Dict[str, Set[str]] = {}
+        graph: dict[str, set[str]] = {}
         for inst in instances:
             if inst.get("entity_type") != "paragraph":
                 continue
@@ -140,9 +140,9 @@ class DrupalConfigValidator:
                     graph.setdefault(source, set()).add(target)
 
         # DFS cycle detection
-        visited: Set[str] = set()
-        path: Set[str] = set()
-        cycles_found: Set[frozenset] = set()
+        visited: set[str] = set()
+        path: set[str] = set()
+        cycles_found: set[frozenset] = set()
 
         def _dfs(node: str) -> None:
             if node in path:
@@ -175,7 +175,7 @@ class DrupalConfigValidator:
         if len(paragraphs) < 2:
             return
 
-        seen: Dict[str, str] = {}
+        seen: dict[str, str] = {}
         for para in paragraphs:
             # Normalise: strip common prefixes/suffixes, lowercase
             normalized = para["id"].lower().replace("_", "").replace("-", "")
@@ -200,7 +200,7 @@ class DrupalConfigValidator:
         instances = fields.get("instances", [])
 
         # Count fields per bundle
-        bundle_counts: Dict[str, int] = {}
+        bundle_counts: dict[str, int] = {}
         for inst in instances:
             key = f"{inst.get('entity_type', '')}.{inst.get('bundle', '')}"
             bundle_counts[key] = bundle_counts.get(key, 0) + 1
@@ -226,7 +226,7 @@ class DrupalConfigValidator:
         instances = fields.get("instances", [])
 
         # Collect all field names that have instances
-        used_fields: Set[str] = set()
+        used_fields: set[str] = set()
         for inst in instances:
             used_fields.add(f"{inst.get('entity_type', '')}.{inst.get('field_name', '')}")
 
@@ -262,10 +262,10 @@ class DrupalConfigValidator:
                     recommendation="Add a description to help content editors understand this field.",
                 ))
 
-    def get_summary_stats(self) -> Dict[str, Any]:
+    def get_summary_stats(self) -> dict[str, Any]:
         """Return counts grouped by severity and issue type."""
-        by_severity: Dict[str, int] = {}
-        by_type: Dict[str, int] = {}
+        by_severity: dict[str, int] = {}
+        by_type: dict[str, int] = {}
 
         for issue in self.issues:
             by_severity[issue.severity] = by_severity.get(issue.severity, 0) + 1
@@ -287,7 +287,7 @@ def run_config_validation(
     drupal_root: Path,
     config_sync_dir: Path,
     progress_callback: Optional[Callable[[str], None]] = None,
-) -> List[Finding]:
+) -> list[Finding]:
     """Run config analysis + validation, returning standard finding dicts.
 
     Args:
@@ -313,7 +313,7 @@ def run_config_validation(
     validator = DrupalConfigValidator(config_data)
     issues = validator.validate_all()
 
-    findings: List[Dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
     for issue in issues:
         if issue.issue_type in _SECURITY_ISSUE_TYPES:
             category = "security"
@@ -322,7 +322,7 @@ def run_config_validation(
         else:
             category = "performance"
 
-        finding: Dict[str, Any] = {
+        finding: dict[str, Any] = {
             "tool": "config_validator",
             "file": f"config/sync ({issue.entity_type})",
             "line": 0,

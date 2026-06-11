@@ -2,9 +2,6 @@
 
 import csv
 import io
-from pathlib import Path
-
-import pytest
 
 SAMPLE_FINDINGS = [
     {
