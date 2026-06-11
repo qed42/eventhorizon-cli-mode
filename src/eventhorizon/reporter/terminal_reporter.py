@@ -1,5 +1,7 @@
 """Rich terminal summary reporter."""
 
+from __future__ import annotations
+
 from typing import Any, Dict, List
 
 from rich.console import Console
