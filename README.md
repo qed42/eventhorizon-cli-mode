@@ -142,6 +142,8 @@ cd eventhorizon-cli-mode
 source ./setup.sh
 ```
 
+> **Note:** run it with `source` (as shown), not `./setup.sh`. The script activates the virtual environment in your *current* shell, which only works when sourced. If you do execute it directly, activate manually afterwards: `source .venv/bin/activate`.
+
 `setup.sh` checks for Python 3.9+, creates a `.venv`, installs all dependencies, and activates the environment in your current shell. When it finishes, two **equivalent** commands are on your PATH — **`eh`** (short) and **`eventhorizon`** (long):
 
 ```Shell
