@@ -64,7 +64,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "[3/3] Installing eventhorizon..."
-"$_eh_dir/.venv/bin/pip" install -e "$_eh_dir/.[dev]"
+"$_eh_dir/.venv/bin/pip" install -e "$_eh_dir/.[dev]" --quiet
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install eventhorizon."
     unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR
