@@ -4,9 +4,9 @@
 # Resolve script directory before anything else.
 # When sourced, $0 may be the shell itself (bash/zsh) or the script path.
 # BASH_SOURCE[0] works in bash; ${(%):-%x} works in zsh; fall back to $0.
-if [ -n "${BASH_SOURCE[0]+set}" ]; then
-    _eh_script="${BASH_SOURCE[0]}"
-elif [ -n "${ZSH_VERSION+set}" ]; then
+if [ -n "${BASH_SOURCE:-}" ]; then
+    _eh_script="${BASH_SOURCE}"
+elif [ -n "${ZSH_VERSION:-}" ]; then
     _eh_script="${(%):-%x}"
 else
     _eh_script="$0"
