@@ -48,7 +48,6 @@ echo "Setting up EventHorizon CLI... (Python $PY_VERSION)"
 # Use absolute paths throughout — no subshell, no cd needed.
 
 echo "[1/3] Creating virtual environment..."
-rm -rf "$_eh_dir/.venv"
 python3 -m venv "$_eh_dir/.venv"
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to create virtual environment."
