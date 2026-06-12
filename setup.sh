@@ -56,7 +56,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "[2/3] Upgrading pip..."
-"$_eh_dir/.venv/bin/pip" install --upgrade pip setuptools wheel
+"$_eh_dir/.venv/bin/pip" install --quiet --upgrade pip
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to upgrade pip."
     unset _eh_dir PY_VERSION PY_MAJOR PY_MINOR
