@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check all commits for DCO sign-off
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const commits = await github.paginate(github.rest.pulls.listCommits, {
