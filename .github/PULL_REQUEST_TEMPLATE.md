@@ -16,3 +16,6 @@
 - [ ] Tests added or updated for behavior changes
 - [ ] Docs updated (README / CONTRIBUTING) if behavior changed
 - [ ] All commits are signed off with `git commit -s` ([DCO](https://developercertificate.org/))
+<!-- Forgot to sign off? (common with web-editor commits)
+     git rebase --signoff origin/master && git push --force-with-lease -->
+

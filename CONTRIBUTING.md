@@ -61,3 +61,15 @@ use the [Developer Certificate of Origin](https://developercertificate.org/) —
 please sign off your commits with `git commit -s` (`Signed-off-by:` line) to
 certify that you wrote the code or otherwise have the right to submit it.
 
+**Forgot to sign off?** This is easy to hit when committing from the GitHub web
+editor, which cannot add the trailer. The `Signed-off-by check` will flag any
+unsigned commits — add the sign-off retroactively and re-push:
+
+```Shell
+# single commit
+git commit --amend -s && git push --force-with-lease
+
+# multiple commits on the branch
+git rebase --signoff origin/master && git push --force-with-lease
+```
+
