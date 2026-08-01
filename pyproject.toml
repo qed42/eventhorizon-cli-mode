@@ -45,7 +45,7 @@ dev = [
     # Pinned to a compatible release: new ruff minors add rules, which would
     # make `ruff check` fail on unchanged code. Bump deliberately, fixing any
     # new findings in the same PR. Keep in sync with .github/workflows/lint.yml.
-    "ruff~=0.15.7",
+    "ruff>=0.15.7,<0.17.0",
 ]
 
 [project.scripts]
